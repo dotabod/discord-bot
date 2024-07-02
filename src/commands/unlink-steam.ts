@@ -1,4 +1,5 @@
 import { clearInterval, setInterval, setTimeout } from "node:timers";
+import { URLSearchParams } from "node:url";
 import {
 	ActionRowBuilder,
 	ButtonBuilder,
@@ -197,7 +198,14 @@ export default {
 			.single();
 
 		if (!tokens.data) {
-			const oauth2URL = `https://discord.com/oauth2/authorize?client_id=${process.env.VITE_DISCORD_CLIENT_ID}&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A5432&scope=connections+identify`;
+			const params = new URLSearchParams({
+				client_id: process.env.VITE_DISCORD_CLIENT_ID!,
+				response_type: "code",
+				redirect_uri: process.env.VITE_REDIRECT_URI!,
+				scope: "connections identify",
+			});
+
+			const oauth2URL = `https://discord.com/oauth2/authorize?${params.toString()}`;
 
 			const linkButton = new ButtonBuilder()
 				.setLabel("Link Discord Account")
