@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "discord-bot-dotabod",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "tsc && prettier --check . && eslint --ext .ts --format=pretty src",
+    "deploy": "doppler run -- bun src/util/deploy.ts",
+    "format": "prettier --write . && eslint --ext .ts --fix --format=pretty src",
+    "start": "doppler run -- bun src/index.ts",
+    "dev": "doppler run -- bun --watch src/index.ts"
+  },
+  "dependencies": {
+    "@discordjs/core": "^1.2.0",
+    "@supabase/supabase-js": "^2.44.2",
+    "discord.js": "^14.15.3",
+    "express": "^4.19.2",
+    "undici": "^6.19.2"
+  },
+  "devDependencies": {
+    "@sapphire/ts-config": "^5.0.1",
+    "@types/express": "^4.17.21",
+    "bun-types": "^1.1.17",
+    "eslint": "^8.57.0",
+    "eslint-config-neon": "^0.1.62",
+    "eslint-formatter-pretty": "^5.0.0",
+    "prettier": "^3.3.2",
+    "typescript": "^5.5.3",
+    "zod": "^3.23.8"
+  }
+}
