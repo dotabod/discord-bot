@@ -17,6 +17,7 @@ import supabase from "../util/supabase.ts";
 import type { Command } from "./index.ts";
 
 async function fetchUserConnections(tokenType: string, accessToken: string) {
+  console.log("Fetching user connections...");
   const userResult = await request(
     "https://discord.com/api/users/@me/connections",
     {
@@ -26,7 +27,9 @@ async function fetchUserConnections(tokenType: string, accessToken: string) {
     },
   );
 
-  return (await userResult.body.json()) as {
+  const connections = await userResult.body.json();
+  console.log("User connections fetched:", connections);
+  return connections as {
     friend_sync: boolean;
     id: string;
     metadata_visibility: number;
@@ -41,17 +44,21 @@ async function fetchUserConnections(tokenType: string, accessToken: string) {
 
 export function steamID64toSteamID32(steamID64: string) {
   if (!steamID64) return null;
-  return Number(steamID64.substr(-16, 16)) - 6_561_197_960_265_728;
+  const steamID32 = Number(steamID64.substr(-16, 16)) - 6_561_197_960_265_728;
+  console.log("Converted Steam ID64 to Steam ID32:", steamID32);
+  return steamID32;
 }
 
 async function deleteSelectedAccounts(
   steamIds: string[],
   interaction: CommandInteraction<CacheType>,
 ) {
+  console.log("Deleting selected accounts:", steamIds);
   for (const id of steamIds) {
     await supabase.from("steam_accounts").delete().eq("steam32Id", id);
   }
 
+  console.log("Selected accounts deleted.");
   await interaction.editReply({
     components: [],
     content: "Selected Steam accounts unlinked",
@@ -62,6 +69,7 @@ async function checkForDiscordConnection(
   interaction: CommandInteraction<CacheType>,
   reply: InteractionResponse<boolean>,
 ) {
+  console.log("Checking for Discord connection...");
   let isConnected = false;
   const interval = 2_000; // Check every 2 seconds
   const timeout = 60_000; // Stop after 60 seconds
@@ -75,11 +83,13 @@ async function checkForDiscordConnection(
       .single();
 
     if (tokens.data) {
+      console.log("Discord connection found.");
       isConnected = true;
       await reply.edit({ components: [], content: "Connected!" });
-      // Continue with the process here
       if (checkInterval) clearInterval(checkInterval);
       await handleUnlinkSteamAccounts(tokens, interaction);
+    } else {
+      console.log("Discord connection not found yet.");
     }
   };
 
@@ -88,6 +98,7 @@ async function checkForDiscordConnection(
   setTimeout(async () => {
     clearInterval(checkInterval);
     if (!isConnected) {
+      console.log("Timeout reached without finding Discord connection.");
       await reply.delete();
     }
   }, timeout);
@@ -97,11 +108,13 @@ async function handleUnlinkSteamAccounts(
   tokens,
   interaction: CommandInteraction<CacheType>,
 ) {
+  console.log("Handling unlink Steam accounts...");
   const data = await fetchUserConnections(
     tokens.data.token_type,
     tokens.data.access_token,
   );
   if (Array.isArray(data)) {
+    console.log("Fetched user connections:", data);
     const steamConnections = data
       .filter(
         (connection) => connection.type === "steam" && connection.verified,
@@ -112,18 +125,19 @@ async function handleUnlinkSteamAccounts(
       }));
 
     if (steamConnections.length === 0) {
+      console.log("No Steam accounts linked.");
+      const message =
+        "No Steam accounts linked. Add one by following this guide: https://www.minitool.com/news/link-steam-to-discord.html";
       if (interaction.replied) {
-        await interaction.editReply(
-          "No Steam accounts linked. Add one by following this guide: https://www.minitool.com/news/link-steam-to-discord.html",
-        );
+        await interaction.editReply(message);
       } else {
-        await interaction.reply(
-          "No Steam accounts linked. Add one by following this guide: https://www.minitool.com/news/link-steam-to-discord.html",
-        );
+        await interaction.reply(message);
       }
 
       return;
     }
+
+    console.log("Steam connections found:", steamConnections);
 
     const options = steamConnections.map((connection) =>
       new StringSelectMenuOptionBuilder()
@@ -166,20 +180,23 @@ async function handleUnlinkSteamAccounts(
         i.user.id === interaction.user.id
       ) {
         const selectedIds = i.values;
+        console.log("Collector collected selected IDs:", selectedIds);
         await deleteSelectedAccounts(selectedIds, interaction);
       }
     });
 
-    collector?.on("end", async () => {
-      if (!collector.ended) {
+    collector?.on("end", async (collected) => {
+      console.log("Collector ended, collected items:", collected.size);
+      if (collected.size === 0) {
+        const message = "Steam account unlinking session expired.";
         if (interaction.replied) {
           await interaction.editReply({
-            content: "Steam account unlinking session expired.",
+            content: message,
             components: [],
           });
         } else {
           await interaction.reply({
-            content: "Steam account unlinking session expired.",
+            content: message,
             components: [],
           });
         }
@@ -194,6 +211,7 @@ export default {
     description: "Unlink your Steam account(s) from Dotabod.",
   },
   async execute(interaction) {
+    console.log("Executing unlink-steam command...");
     const tokens = await supabase
       .from("discord_accounts")
       .select("access_token, token_type")
@@ -201,6 +219,7 @@ export default {
       .single();
 
     if (!tokens.data) {
+      console.log("No Discord tokens found, prompting user to link account...");
       const params = new URLSearchParams({
         client_id: process.env.VITE_DISCORD_CLIENT_ID!,
         response_type: "code",
@@ -226,6 +245,9 @@ export default {
       return;
     }
 
+    console.log(
+      "Discord tokens found, proceeding to handle unlink Steam accounts...",
+    );
     await handleUnlinkSteamAccounts(tokens, interaction);
   },
 } satisfies Command;
