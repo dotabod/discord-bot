@@ -78,5 +78,8 @@ export function initServer() {
     return response.sendFile("index.html", { root: "." });
   });
 
-  app.listen(80, () => console.log(`App listening at http://localhost:${80}`));
+  const port = process.env.PORT || 80;
+  app.listen(port, () =>
+    console.log(`App listening at http://localhost:${port}`),
+  );
 }
