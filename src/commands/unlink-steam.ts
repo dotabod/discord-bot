@@ -41,7 +41,6 @@ async function fetchUserConnections(tokenType: string, accessToken: string) {
 
 export function steamID64toSteamID32(steamID64: string) {
 	if (!steamID64) return null;
-	// eslint-disable-next-line unicorn/prefer-string-slice
 	return Number(steamID64.substr(-16, 16)) - 6_561_197_960_265_728;
 }
 

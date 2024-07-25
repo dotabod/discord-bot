@@ -5,6 +5,6 @@ const supabaseUrl = process.env.DB_URL ?? "";
 const supabaseKey = process.env.DB_SECRET ?? "";
 
 const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
-	auth: { persistSession: false },
+  auth: { persistSession: false },
 });
 export default supabase;
