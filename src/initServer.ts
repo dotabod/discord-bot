@@ -78,7 +78,7 @@ export function initServer() {
 		return response.sendFile("index.html", { root: "." });
 	});
 
-	app.listen(5_432, () =>
-		console.log(`App listening at http://localhost:${5_432}`),
+	app.listen(5499, () =>
+		console.log(`App listening at http://localhost:${5499}`),
 	);
 }
