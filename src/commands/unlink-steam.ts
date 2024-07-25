@@ -16,6 +16,45 @@ import { request } from "undici";
 import supabase from "../util/supabase.ts";
 import type { Command } from "./index.ts";
 
+async function refreshDiscordToken(refreshToken: string) {
+  console.log("Refreshing Discord token...");
+  const tokenResult = await request("https://discord.com/api/oauth2/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      client_id: process.env.VITE_DISCORD_CLIENT_ID!,
+      client_secret: process.env.VITE_DISCORD_CLIENT_SECRET!,
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
+  });
+
+  const tokenData = await tokenResult.body.json();
+  console.log("New token data:", tokenData);
+
+  if (tokenData.error) {
+    throw new Error(`Failed to refresh token: ${tokenData.error}`);
+  }
+
+  const { access_token, refresh_token, token_type, expires_in } = tokenData;
+  const updated_at = new Date().toISOString();
+
+  await supabase
+    .from("discord_accounts")
+    .update({
+      access_token,
+      refresh_token,
+      token_type,
+      expires_in,
+      updated_at,
+    })
+    .eq("refresh_token", refreshToken);
+
+  return { access_token, token_type };
+}
+
 async function fetchUserConnections(tokenType: string, accessToken: string) {
   console.log("Fetching user connections...");
   const userResult = await request(
@@ -109,10 +148,21 @@ async function handleUnlinkSteamAccounts(
   interaction: CommandInteraction<CacheType>,
 ) {
   console.log("Handling unlink Steam accounts...");
-  const data = await fetchUserConnections(
-    tokens.data.token_type,
-    tokens.data.access_token,
-  );
+  let { access_token, token_type } = tokens.data;
+  const expiresAt =
+    new Date(tokens.data.created_at).getTime() + tokens.data.expires_in * 1000;
+  const currentTime = Date.now();
+
+  if (currentTime > expiresAt) {
+    console.log("Token expired, refreshing...");
+    const refreshedTokens = await refreshDiscordToken(
+      tokens.data.refresh_token,
+    );
+    access_token = refreshedTokens.access_token;
+    token_type = refreshedTokens.token_type;
+  }
+
+  const data = await fetchUserConnections(token_type, access_token);
   if (Array.isArray(data)) {
     console.log("Fetched user connections:", data);
     const steamConnections = data
@@ -214,7 +264,7 @@ export default {
     console.log("Executing unlink-steam command...");
     const tokens = await supabase
       .from("discord_accounts")
-      .select("access_token, token_type")
+      .select("access_token, refresh_token, token_type, created_at, expires_in")
       .eq("providerAccountId", Number(interaction.user.id))
       .single();
 
