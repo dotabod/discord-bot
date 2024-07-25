@@ -7,6 +7,10 @@ export function initServer() {
   console.log("Initializing Express server...");
   const app = express();
 
+  app.get("/status", (req, res) => {
+    res.send("OK");
+  });
+
   app.get("/", async ({ query }, response) => {
     const { code } = query;
     console.log("Received request with query code:", code);
