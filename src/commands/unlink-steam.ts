@@ -25,7 +25,7 @@ async function refreshDiscordToken(refreshToken: string) {
     },
     body: new URLSearchParams({
       client_id: process.env.VITE_DISCORD_CLIENT_ID!,
-      client_secret: process.env.VITE_DISCORD_CLIENT_SECRET!,
+      client_secret: process.env.DISCORD_CLIENT_SECRET!,
       grant_type: "refresh_token",
       refresh_token: refreshToken,
     }),
