@@ -114,9 +114,13 @@ async function handleUnlinkSteamAccounts(
 
 		if (steamConnections.length === 0) {
 			if (interaction.replied) {
-				await interaction.editReply("No Steam accounts linked.");
+				await interaction.editReply(
+					"No Steam accounts linked. Add one by following this guide: https://www.minitool.com/news/link-steam-to-discord.html",
+				);
 			} else {
-				await interaction.reply("No Steam accounts linked.");
+				await interaction.reply(
+					"No Steam accounts linked. Add one by following this guide: https://www.minitool.com/news/link-steam-to-discord.html",
+				);
 			}
 
 			return;
