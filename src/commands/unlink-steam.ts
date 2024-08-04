@@ -28,7 +28,7 @@ async function refreshDiscordToken(refreshToken: string) {
       client_secret: process.env.DISCORD_CLIENT_SECRET!,
       grant_type: "refresh_token",
       refresh_token: refreshToken,
-    }),
+    }).toString(),
   });
 
   const tokenData = await tokenResult.body.json();
@@ -275,9 +275,9 @@ export default {
         response_type: "code",
         redirect_uri: process.env.VITE_REDIRECT_URI!,
         scope: "connections identify",
-      });
+      }).toString();
 
-      const oauth2URL = `https://discord.com/oauth2/authorize?${params.toString()}`;
+      const oauth2URL = `https://discord.com/oauth2/authorize?${params}`;
 
       const linkButton = new ButtonBuilder()
         .setLabel("Link Discord Account")
