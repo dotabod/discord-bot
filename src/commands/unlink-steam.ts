@@ -292,6 +292,12 @@ async function reauthenticateUser(interaction: CommandInteraction<CacheType>) {
     ephemeral: true,
   });
 
+  // Clear their tokens in db
+  await supabase
+    .from("discord_accounts")
+    .delete()
+    .eq("providerAccountId", Number(interaction.user.id));
+
   await checkForDiscordConnection(interaction, reply);
 }
 
