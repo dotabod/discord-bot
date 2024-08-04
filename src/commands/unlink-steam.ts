@@ -17,7 +17,12 @@ import supabase from "../util/supabase.ts";
 import type { Command } from "./index.ts";
 
 async function refreshDiscordToken(refreshToken: string) {
-  console.log("Refreshing Discord token...");
+  console.log("Refreshing Discord token...", {
+    client_id: process.env.VITE_DISCORD_CLIENT_ID!,
+    client_secret: process.env.DISCORD_CLIENT_SECRET!,
+    grant_type: "refresh_token",
+    refresh_token: refreshToken,
+  });
   const tokenResult = await request("https://discord.com/api/oauth2/token", {
     method: "POST",
     headers: {
