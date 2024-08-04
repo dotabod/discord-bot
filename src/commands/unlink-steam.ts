@@ -160,9 +160,21 @@ async function handleUnlinkSteamAccounts(
 
   if (currentTime > expiresAt) {
     console.log("Token expired, refreshing...");
-    const refreshedTokens = await refreshDiscordToken(
-      tokens.data.refresh_token,
-    );
+    let refreshedTokens:
+      | { access_token: string; token_type: string }
+      | undefined;
+    try {
+      refreshedTokens = await refreshDiscordToken(tokens.data.refresh_token);
+    } catch (e) {
+      const message =
+        "Error refreshing Discord token. Let an admin know, and try again later.";
+      if (interaction.replied) {
+        await interaction.editReply(message);
+      } else {
+        await interaction.reply(message);
+      }
+      return;
+    }
     access_token = refreshedTokens.access_token;
     token_type = refreshedTokens.token_type;
   }
