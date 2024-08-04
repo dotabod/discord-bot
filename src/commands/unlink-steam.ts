@@ -166,13 +166,8 @@ async function handleUnlinkSteamAccounts(
     try {
       refreshedTokens = await refreshDiscordToken(tokens.data.refresh_token);
     } catch (e) {
-      const message =
-        "Error refreshing Discord token. Let an admin know, and try again later.";
-      if (interaction.replied) {
-        await interaction.editReply(message);
-      } else {
-        await interaction.reply(message);
-      }
+      console.error(e);
+      await reauthenticateUser(interaction);
       return;
     }
     access_token = refreshedTokens.access_token;
@@ -272,6 +267,34 @@ async function handleUnlinkSteamAccounts(
   }
 }
 
+async function reauthenticateUser(interaction: CommandInteraction<CacheType>) {
+  console.log("Prompting user to reauthenticate...");
+  const params = new URLSearchParams({
+    client_id: process.env.VITE_DISCORD_CLIENT_ID!,
+    response_type: "code",
+    redirect_uri: process.env.VITE_REDIRECT_URI!,
+    scope: "connections identify",
+  }).toString();
+
+  const oauth2URL = `https://discord.com/oauth2/authorize?${params}`;
+
+  const linkButton = new ButtonBuilder()
+    .setLabel("Link Discord Account")
+    .setStyle(ButtonStyle.Link)
+    .setURL(oauth2URL);
+
+  const row = new ActionRowBuilder().addComponents(linkButton);
+
+  const reply = await interaction.reply({
+    content:
+      "Error refreshing Discord token. Please reauthenticate by linking your Discord account again.",
+    components: [row],
+    ephemeral: true,
+  });
+
+  await checkForDiscordConnection(interaction, reply);
+}
+
 export default {
   data: {
     name: "unlink-steam",
@@ -287,28 +310,7 @@ export default {
 
     if (!tokens.data) {
       console.log("No Discord tokens found, prompting user to link account...");
-      const params = new URLSearchParams({
-        client_id: process.env.VITE_DISCORD_CLIENT_ID!,
-        response_type: "code",
-        redirect_uri: process.env.VITE_REDIRECT_URI!,
-        scope: "connections identify",
-      }).toString();
-
-      const oauth2URL = `https://discord.com/oauth2/authorize?${params}`;
-
-      const linkButton = new ButtonBuilder()
-        .setLabel("Link Discord Account")
-        .setStyle(ButtonStyle.Link)
-        .setURL(oauth2URL);
-
-      const row = new ActionRowBuilder().addComponents(linkButton);
-
-      const reply = await interaction.reply({
-        content: "You need to link your Discord account first!",
-        components: [row],
-        ephemeral: true,
-      });
-      await checkForDiscordConnection(interaction, reply);
+      await reauthenticateUser(interaction);
       return;
     }
 
