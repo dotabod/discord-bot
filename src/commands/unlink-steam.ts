@@ -191,9 +191,15 @@ async function handleUnlinkSteamAccounts(
       const message =
         "No Steam accounts linked. Add one by following this guide: https://www.minitool.com/news/link-steam-to-discord.html";
       if (interaction.replied) {
-        await interaction.editReply(message);
+        await interaction.editReply({
+          content: message,
+          ephemeral: true,
+        });
       } else {
-        await interaction.reply(message);
+        await interaction.reply({
+          content: message,
+          ephemeral: true,
+        });
       }
 
       return;
