@@ -193,7 +193,7 @@ async function handleUnlinkSteamAccounts(
       if (interaction.replied) {
         await interaction.editReply(message);
       } else {
-        await interaction.reply(message);
+        await interaction.reply({ content: message, ephemeral: true });
       }
 
       return;
@@ -201,11 +201,13 @@ async function handleUnlinkSteamAccounts(
 
     console.log("Steam connections found:", steamConnections);
 
-    const options = steamConnections.map((connection) =>
-      new StringSelectMenuOptionBuilder()
+    const options = steamConnections.map((connection) => {
+      if (!connection.id) return;
+
+      return new StringSelectMenuOptionBuilder()
         .setLabel(connection.name)
-        .setValue(connection.id.toString()),
-    );
+        .setValue(connection.id.toString());
+    });
 
     const selectMenu = new StringSelectMenuBuilder()
       .setCustomId("select-steam-accounts")
@@ -260,6 +262,7 @@ async function handleUnlinkSteamAccounts(
           await interaction.reply({
             content: message,
             components: [],
+            ephemeral: true,
           });
         }
       }
