@@ -12,18 +12,18 @@
     "dev": "doppler run -- bun --watch src/index.ts"
   },
   "dependencies": {
-    "@discordjs/core": "^1.2.0",
-    "@supabase/supabase-js": "^2.44.4",
-    "discord.js": "^14.15.3",
-    "express": "^4.19.2",
-    "undici": "^6.19.4"
+    "@discordjs/core": "^2.0.0",
+    "@supabase/supabase-js": "^2.45.4",
+    "discord.js": "^14.16.3",
+    "express": "^4.21.0",
+    "undici": "^6.19.8"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.8.3",
+    "@biomejs/biome": "1.9.3",
     "@sapphire/ts-config": "^5.0.1",
-    "@types/express": "^4.17.21",
-    "bun-types": "^1.1.20",
-    "typescript": "^5.5.4",
+    "@types/express": "^5.0.0",
+    "bun-types": "^1.1.29",
+    "typescript": "^5.6.2",
     "zod": "^3.23.8"
   },
   "trustedDependencies": [
